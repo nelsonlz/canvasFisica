@@ -15,34 +15,77 @@ and open the template in the editor.
       <canvas id='tela' width='400' height="400">sem suporte</canvas>
       <script type='text/javascript' src='lib/core/primitivos/circulo.js'></script>
       <script type='text/javascript' src='lib/core/simpleColision.js'></script>
+      <script type='text/javascript' src='lib/core/temporizador/timer.js'></script>
       <script type='text/javascript'>
-         var canvas  = document.getElementById("tela");
-         var context = canvas.getContext("2d");
          
-         ball = new circulo(100,100,10,1,1);
-         ball.draw(context);
+         var _Core = null;
          
-         ball2 = new circulo(120,100,10,1,1);
+         window.onload = init;
          
-         ball3 = new circulo(120,200,10,-1,0);
-         
-         
-         function paint()
+         function init()
          {
-            ball.testColision(ball2);
-            ball.anime();
-            ball.draw(context);
-            
-            ball2.testColision(ball);
-            ball2.anime();
-            ball2.draw(context);
-            
-            ball3.testColision(ball);
-            ball3.anime();
-            ball3.draw(context);
+            _Core = new Core().initCore();
          }
          
-         loop = window.setInterval("paint()",40);
+         function Core()
+         {
+            this.maxfps = 64;
+            
+            this.frameCount = 0;
+            this.currentFps = 0
+            this.drawInterval = 1 / this.maxfps * 1000;
+            this.lastFps = new Date().getTime();
+            
+            this.ball = new circulo(100,100,20,({x:1,y:0}),1);
+            
+            this.canvas = null;
+            this.context = null;
+            
+            this.initCore = function()
+            {
+               this.canvas = document.getElementById("tela");
+               this.context = this.canvas.getContext("2d");
+               
+               setInterval(function(){_Core.startApp();}, this.drawInterval);
+                  
+                  return this;
+            }
+         
+         
+            this.startApp = function()
+            {
+               this.update();
+               this.draw();
+            }
+         
+         this.update = function()
+         {
+            var thisFrame = new Date().getTime();
+            var diffTime = Math.ceil((thisFrame - this.lastFps));
+            if(diffTime >= 1000)
+            {
+               this.currentFps = this.frameCount;
+               this.frameCount = 0.0;
+               this.lastFps = thisFrame;
+            }
+            this.frameCount++;
+         }
+         
+         this.draw = function()
+         {
+            this.context.clearRect(0,0,this.canvas.width, this.canvas.height);
+            this.context.save();
+            this.context.fillStyle = "#000";
+            this.context.font = "bold 10px sans-serif";
+            this.context.fillText('FPS: '+this.currentFps + '/'+ this.maxfps, 10, 15);
+            
+            if(!this.ball.testLimitColisition( ({w:this.canvas.width, h:this.canvas.height}) ) )
+               this.ball.anime();
+            this.ball.draw(this.context);
+            
+            this.context.restore();
+         }
+      }
          
       </script>
    </body>
